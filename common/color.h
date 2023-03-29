@@ -1,7 +1,7 @@
 #ifndef _COLOR_H
 #define _COLOR_H
 
-#define NONE      "\e[0m"
+#define NONE      "\e[0;m"
 #define BLACK     "\e[0;30m"
 #define L_BLACK   "\e[1;30m"
 #define RED       "\e[0;31m"
