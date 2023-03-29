@@ -2,7 +2,7 @@
 
 int main() {
 
-    FILE *fp;
+    FILE* fp;
     char buffer[1024];
 
     fp = fopen("FopenDemoFile.txt", "rw");
