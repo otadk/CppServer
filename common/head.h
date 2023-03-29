@@ -6,6 +6,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include <fcntl.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include "color.h"
 #include "common.h"
 #include "thread_pool.h"
