@@ -53,3 +53,12 @@ void* thread_run(void* threadData) {
         printf("%s", (char*)data);
     }
 }
+
+void* thread_task(void* threadData) {
+    pthread_detach(pthread_self());
+    struct task_queue* taskQueue = (struct task_queue*) threadData;
+    while (1) {
+        void* data = task_queue_pop(taskQueue);
+        printf("%s", (char*)data);
+    }
+}

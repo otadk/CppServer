@@ -11,9 +11,11 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/epoll.h>
 #include "color.h"
 #include "common.h"
 #include "thread_pool.h"
+#include "hash.h"
 
 // gcc xxx.c -D _D to start Debug mode
 #ifdef _D
