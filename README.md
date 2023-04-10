@@ -8,6 +8,13 @@
 
 编译client.c只需要client.c头文件。
 
+```bash
+gcc server.c -D _D -o server #生成server可执行程序
+gcc client.c -o client #生成client可执行程序
+```
+
+编译client.c只需要client.c头文件。Qt需要使用Qt开发工具在Qt目录下进行编译。
+
 common和test目录是开发过程中的代码，并不用于最终编译。
 
 ### commmon
