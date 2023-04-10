@@ -1,56 +1,6 @@
 #include "../common/head.h"
 
 int clients[2000];
-char* data[2000];
-int epollfd;
-pthread_mutex_t mutex[2000];
-
-void* thread_run(void* threadData) {
-    pthread_detach(pthread_self());
-    struct task_queue* taskQueue = (struct task_queue*) threadData;
-    while (1) {
-        void* data = task_queue_pop(taskQueue);
-        printf("%s", (char*)data);
-    }
-}
-
-void do_work(int fd) {
-    char buffer[4096] = {0};
-    int recvsize = -1;
-    int index = strlen(data[fd]);
-    if ((recvsize = recv(fd, buffer, sizeof(buffer), 0)) <= 0 || (buffer[0] == 'q')) {
-        epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, NULL);
-        DBG(RED"<Close> : connection close\n"NONE);
-        close(fd);
-        return ;
-    }
-    pthread_mutex_lock(&mutex[fd]);
-    DBG(GREEN"<Recv> recv data.\n"NONE);
-    for (int i = 0; i < recvsize; ++i) {
-        if (buffer[i] >= 'A' && buffer[i] <= 'Z') {
-            data[fd][index] = buffer[i] - 'A' + 'a';
-        } else if (buffer[i] >= 'a' && buffer[i] <= 'z') {
-            data[fd][index] = buffer[i] - 'a' + 'A';
-        } else {
-            data[fd][index] = buffer[i];
-            if (buffer[i] == '\n') {
-                DBG(GREEN"<Success> send data.\n"NONE);
-                send(fd, data[fd], index, 0);
-            }
-        }
-        index += 1;
-    }
-    pthread_mutex_unlock(&mutex[fd]);
-}
-
-void* thread_work(void* threadData) {
-    pthread_detach(pthread_self());
-    struct task_queue* taskQueue = (struct task_queue*) threadData;
-    while (1) {
-        int* fd = task_queue_pop(taskQueue);
-        do_work(*fd);
-    }
-}
 
 int main(int argc, char** argv) {
 
