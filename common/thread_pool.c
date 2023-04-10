@@ -45,20 +45,11 @@ void* task_queue_pop(struct task_queue* taskQueue) {
     return result;
 }
 
-void* thread_run(void* threadData) {
-    pthread_detach(pthread_self());
-    struct task_queue* taskQueue = (struct task_queue*) threadData;
-    while (1) {
-        void* data = task_queue_pop(taskQueue);
-        printf("%s", (char*)data);
+void task_queue_clear(struct task_queue* taskQueue) {
+    for (int i = 0; i < taskQueue->size; ++i) {
+        if (taskQueue->data != NULL) {
+            free(taskQueue->data[i]);
+        }
     }
-}
-
-void* thread_task(void* threadData) {
-    pthread_detach(pthread_self());
-    struct task_queue* taskQueue = (struct task_queue*) threadData;
-    while (1) {
-        void* data = task_queue_pop(taskQueue);
-        printf("%s", (char*)data);
-    }
+    free(taskQueue);
 }

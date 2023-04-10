@@ -16,4 +16,7 @@ struct chat_msg {
     char msg[512];
 };
 
+int add_to_reactor(int epollfd, int fd);
+void* sub_reactor(void* arg);
+
 #endif

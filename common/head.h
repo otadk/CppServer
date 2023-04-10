@@ -12,12 +12,14 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-// #include <sys/epoll.h>
+#include <sys/epoll.h>
+#include <sys/select.h>
 #include "color.h"
 #include "common.h"
 #include "thread_pool.h"
 #include "hash.h"
 #include "chat.h"
+#include "hashMap.h"
 
 // gcc xxx.c -D _D to start Debug mode
 #ifdef _D

@@ -1,6 +1,56 @@
-#include "common/head.h"
+#include "../common/head.h"
 
 int clients[2000];
+char* data[2000];
+int epollfd;
+pthread_mutex_t mutex[2000];
+
+void* thread_run(void* threadData) {
+    pthread_detach(pthread_self());
+    struct task_queue* taskQueue = (struct task_queue*) threadData;
+    while (1) {
+        void* data = task_queue_pop(taskQueue);
+        printf("%s", (char*)data);
+    }
+}
+
+void do_work(int fd) {
+    char buffer[4096] = {0};
+    int recvsize = -1;
+    int index = strlen(data[fd]);
+    if ((recvsize = recv(fd, buffer, sizeof(buffer), 0)) <= 0 || (buffer[0] == 'q')) {
+        epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, NULL);
+        DBG(RED"<Close> : connection close\n"NONE);
+        close(fd);
+        return ;
+    }
+    pthread_mutex_lock(&mutex[fd]);
+    DBG(GREEN"<Recv> recv data.\n"NONE);
+    for (int i = 0; i < recvsize; ++i) {
+        if (buffer[i] >= 'A' && buffer[i] <= 'Z') {
+            data[fd][index] = buffer[i] - 'A' + 'a';
+        } else if (buffer[i] >= 'a' && buffer[i] <= 'z') {
+            data[fd][index] = buffer[i] - 'a' + 'A';
+        } else {
+            data[fd][index] = buffer[i];
+            if (buffer[i] == '\n') {
+                DBG(GREEN"<Success> send data.\n"NONE);
+                send(fd, data[fd], index, 0);
+            }
+        }
+        index += 1;
+    }
+    pthread_mutex_unlock(&mutex[fd]);
+}
+
+void* thread_work(void* threadData) {
+    pthread_detach(pthread_self());
+    struct task_queue* taskQueue = (struct task_queue*) threadData;
+    while (1) {
+        int* fd = task_queue_pop(taskQueue);
+        do_work(*fd);
+    }
+}
 
 int main(int argc, char** argv) {
 
@@ -14,18 +64,18 @@ int main(int argc, char** argv) {
     }
 
     int sockfdListen;
-    int port = atoi(port);
+    int port = atoi(argv[1]);
     if ((sockfdListen = socket_create(port)) < 0) {
         perror("socket_create");
         exit(1);
     } 
 
-    DBG(GREEN"Server starts.\n"NONE);
+    DBG(GREEN"<Init>Server starts.\n"NONE);
 
     struct task_queue* taskQueue = (struct task_queue*)malloc(sizeof(struct task_queue));
     task_queue_init(taskQueue, QUEUESIZE);
     
-    DBG(GREEN"task queue starts.\n"NONE);
+    DBG(GREEN"<Init>task queue starts.\n"NONE);
 
     pthread_t* tid = (pthread_t*)calloc(INS, sizeof(pthread_t));
     
@@ -33,9 +83,13 @@ int main(int argc, char** argv) {
         pthread_create(tid + i, NULL, thread_work, (void*)taskQueue);
     }
 
-    DBG(GREEN"thread starts.\n"NONE);
+    DBG(GREEN"<Init>thread starts.\n"NONE);
 
-    int epollfd;
+    for (int i = 0; i < MAXUSER; ++i) {
+        pthread_mutex_init(&mutex[i], NULL);
+        data[i] = (char*)calloc(4096, sizeof(char));
+    }
+
     if ((epollfd = epoll_create(1)) < 0) {
         perror("epoll_create");
         exit(1);
@@ -50,7 +104,7 @@ int main(int argc, char** argv) {
         exit(1);
     }
     
-    DBG(GREEN"epoll listen starts.\n"NONE);
+    DBG(GREEN"<Init>epoll listen starts.\n"NONE);
 
     for (;;) {
         int nfds = epoll_wait(epollfd, events, MAXEVENTS, -1);
@@ -68,7 +122,8 @@ int main(int argc, char** argv) {
                 }
                 clients[sockfd] = sockfd;
                 ev.data.fd = sockfd;
-                ev.events = EPOLLIN;
+                ev.events = EPOLLIN | EPOLLET;
+                make_nonblock(sockfd);
                 if (epoll_ctl(epollfd, EPOLL_CTL_ADD, sockfd, &ev) < 0) {
                     perror("epoll_ctl");
                     exit(1);
