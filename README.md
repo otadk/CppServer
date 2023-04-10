@@ -1,6 +1,14 @@
 # CppServer
 
--cpp服务器开发中
+这是一个用于网络聊天的程序，分为服务端与客户端。
+
+通过编译server.c获得服务端程序，通过编译client.c获得客服端程序，另外通过Qt获得客户端GUI程序。
+
+编译server.c只需要server.h头文件。
+
+编译client.c只需要client.c头文件。
+
+common和test目录是开发过程中的代码，并不用于最终编译。
 
 ### commmon
 
